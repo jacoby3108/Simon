@@ -2,15 +2,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "cqueue.h"    // circular queue services
+#include "flibspi.h"
 
-#include "cqueue.h"
-
-// bitbangspi v4.00 by Dany (User space version) 29-mayo-2016
+// Simon v1.00 by Dany (User space version) 20-Oct-2016
 // Note this version uses fopen high level function bear in mind that it is BUFFERED
 
-//ON PI gcc simulacion.c portsimulator.c libterm.c flibspi.c -o simulacion Hi level fops (fopen)
-//ON PI gcc simulacion.c portsimulator.c libterm.c libspi.c -o simulacion  Low level fops (open)
-//ON PC gcc simulacion.c portsimulator.c libterm.o -o simulacion
+// Compile command line
+// gcc ...
 
 //http://www.auctoris.co.uk/2012/08/23/gpio-with-sysfs-on-raspberry-pi-part-2/
 
@@ -18,15 +17,9 @@
 #define ON   1
 #define OFF  0
 
+// ---------------------------------
 #define DEBUG  OFF    
-
-//*****************Select Hardware Type: Serial or parallel*********************************
-#define PARA		0
-#define SERIAL		1
-
-#define HARDWARE 	SERIAL
-//*****************************************************************************************
-
+// ---------------------------------
 
 #if DEBUG == ON
 # define DEBUG_PRINT(x) fprintf x
@@ -34,8 +27,7 @@
 # define DEBUG_PRINT(x) do {} while (0)
 #endif
 
-#define TEXTIFY(A) #A
-#define GPIO(pin)  TEXTIFY(/sys/class/gpio/gpio ## pin )
+
 
 typedef struct 
 		{
@@ -48,9 +40,6 @@ typedef struct
 		} PIN;
 			
 			
-#if HARDWARE == SERIAL
-
-
 PIN pins[] ={{"BLUE_LED",18,"18","out",0},
 			 {"GREEN_LED",25,"25","out",0},
 			 {"RED_LED",23,"23","out",0},
@@ -59,64 +48,6 @@ PIN pins[] ={{"BLUE_LED",18,"18","out",0},
 			 {"GREEN_KEY",17,"17","in",0},
 			 {"RED_KEY",4,"4","in",0},
 			 {"YELLOW_KEY",22,"22","in",0}};
-			 
-			 
-
-enum pin_index {
-				PIN_BLUE_LED,
-				PIN_GREEN_LED,
-				PIN_RED_LED,
-				PIN_YELLOW_LED,
-				PIN_BLUE_KEY,
-				PIN_GREEN_KEY,
-				PIN_RED_KEY,
-				PIN_YELLOW_KEY,
-			   };
-
-#elif HARDWARE == PARA
-			
-PIN pins[] ={
-				{"D0",4,"4","out",0},
-				{"D1",17,"17","out",0},
-				{"D2",27,"27","out",0},
-				{"D3",22,"22","out",0},
-				{"D4",18,"18","out",0},
-				{"D5",23,"23","out",0},
-				{"D6",24,"24","out",0},
-				{"D7",25,"25","out",0}};
-				
-
-				
-enum pin_index {PIN_D0,
-				PIN_D1,
-				PIN_D2,
-				PIN_D3,
-				PIN_D4,
-				PIN_D5,
-				PIN_D6,
-				PIN_D7};
-
-#endif
-
-// ============ KEYS ============
-
-
-#define BLUE_KEY_MASK   0x01
-#define GREEN_KEY_MASK  0x02
-#define RED_KEY_MASK    0x04
-#define YELLOW_KEY_MASK 0x08
-
-#define BLUE_DOWN 		0x81 //(BLUE_KEY_MASK | 0x80)
-#define BLUE_UP 		0x01 //(BLUE_KEY_MASK | 0x00)
-
-#define GREEN_DOWN 		(GREEN_KEY_MASK | 0x80)
-#define GREEN_UP 		(GREEN_KEY_MASK | 0x00)
-
-#define RED_DOWN 		(RED_KEY_MASK | 0x80)
-#define RED_UP 		    (RED_KEY_MASK | 0x00)
-
-#define YELLOW_DOWN 	(YELLOW_KEY_MASK | 0x80)
-#define YELLOW_UP 		(YELLOW_KEY_MASK | 0x00)
 
 
 // Pin file system
@@ -137,25 +68,19 @@ enum pin_index {PIN_D0,
 void Export_Pins(void);
 void Set_PIN_Direction(void);
 void Set_Port_handles(void);
-void Set_Pin(int pin);
-void Clr_Pin(int pin);
-int Read_Pin(int pin);
-unsigned char spiWrite(const unsigned char regData);
-void initspi(void);
-void scan_keys(void);
+
 
 FILE *handle_export;
 int nWritten,nread;  // bytes read or written during file operations
-unsigned char contador;
 int i,j,k;
 
-int main(void)
+int main1(void)
 {
 	
 	unsigned char key ;
 	QueueInit();	// initialize queue
 	
-	initspi();
+	InitHard();
 	
 	Set_Pin(PIN_BLUE_LED);
 	Set_Pin(PIN_GREEN_LED);
@@ -191,8 +116,30 @@ int main(void)
 			if(key==BLUE_DOWN)
 			printf("BLUE DOWN \n");
 			
+			if(key==BLUE_UP)
+			printf("BLUE UP \n");
+			
+						
 			if(key==GREEN_DOWN)
 			printf("GREEN DOWN \n");
+			
+			if(key==GREEN_UP)
+			printf("GREEN UP \n");
+			
+			if(key==RED_DOWN)
+			printf("RED DOWN \n");
+			
+			if(key==RED_UP)
+			printf("RED UP \n");
+			
+			if(key==YELLOW_DOWN)
+			printf("YELLOW DOWN \n");
+			
+			if(key==YELLOW_UP)
+			printf("YELLOW UP \n");
+			
+			
+			
 		
 		}
 	
@@ -203,7 +150,7 @@ int main(void)
 	return 0;
 }
 
-void initspi(void)
+void InitHard(void)
 {
 	Export_Pins();					// Export Used pins to User space for debug
 	Set_PIN_Direction();			// Set Pin I/O 
@@ -238,7 +185,7 @@ char value[MAX_VAL];
 	else
 		DEBUG_PRINT((stdout, "Pin Value from file %s (handle=%X) is= %s\n",pins[pin].txtpin,pins[pin].handle,value));
 	
-	/// there is a problem reading continusly from this file 
+	/// there is a problem reading continuosly from this file 
 	/// unfortunately fseek or rewind doesn't work. I must close / open every time 
 	/// Pseudofiles like those in /sys may not work with those functions 
 	
@@ -253,7 +200,7 @@ char value[MAX_VAL];
 	
 	
 	
-	// open again	
+	// open again for next read	
 
 	strcpy(device,gpio_str);
 	strcat(device,pins[pin].txtpin);
@@ -478,13 +425,13 @@ static unsigned char last=0;	// remember last key state
 		if((changed&BLUE_KEY_MASK)&keys)		// (changed & mask) & now   @posedge
 		{
 			PushQueue(BLUE_DOWN);	   
-		   // printf("BDQin:%.2X  ",BLUE_DOWN);
+		   
 		}
 			
 		if((changed&BLUE_KEY_MASK)&last)		// (changed & mask) & last  @negedge
 		{
 			PushQueue(BLUE_UP);	
-		  //  printf("BUQin:%.2X  ",BLUE_UP);
+		  
 		}	
 			
 		if((changed&GREEN_KEY_MASK)&keys)		// (changed & mask) & now   @posedge
@@ -498,6 +445,32 @@ static unsigned char last=0;	// remember last key state
 			PushQueue(GREEN_UP);	
 		
 		}
+		
+		
+		if((changed&RED_KEY_MASK)&keys)		// (changed & mask) & now   @posedge
+		{
+			PushQueue(RED_DOWN);	
+		
+		}
+		
+		if((changed&RED_KEY_MASK)&last)		// (changed & mask) & last  @negedge
+		{
+			PushQueue(RED_UP);	
+		
+		}
+		
+		if((changed&YELLOW_KEY_MASK)&keys)		// (changed & mask) & now   @posedge
+		{
+			PushQueue(YELLOW_DOWN);	
+		
+		}
+		
+		if((changed&YELLOW_KEY_MASK)&last)		// (changed & mask) & last  @negedge
+		{
+			PushQueue(YELLOW_UP);	
+		
+		}
+		
 		
 	}
 

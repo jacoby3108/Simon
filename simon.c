@@ -1,26 +1,29 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-
 #include <ctype.h>
 #include <time.h>
 #include <unistd.h>
+#include "cqueue.h"    // circular queue services
+#include "flibspi.h"
 
-#include "libterm.h"
-//*****************Select Hardware Type: PI_Board or None (Simulaton)*********************************
-#define NONE		0
-#define PI_BOARD	1
 
-#define HARDWARE 	NONE
+
 //*****************************************************************************************
 
 int main(void)
 {
+
+	unsigned char key ;
+	QueueInit();	// initialize queue
 	
-	#if HARDWARE == PI_BOARD
-	initspi();
-	#endif
+	InitHard();
 	
+	Set_Pin(PIN_BLUE_LED);
+	Set_Pin(PIN_GREEN_LED);
+	Clr_Pin(PIN_RED_LED);
+	Clr_Pin(PIN_YELLOW_LED);
+
 	
 	return 0;
 }
