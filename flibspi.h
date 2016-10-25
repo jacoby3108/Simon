@@ -62,4 +62,10 @@ void InitHard(void);
 void scan_keys(void);
 
 
+// Ansi.sys like
+
+void gotoxy(int x, int y);   // x is colum and y is row
+void clrscr();				 // Clear Screen 
+
+
 #endif

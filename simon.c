@@ -8,7 +8,7 @@
 #include "flibspi.h"
 #include <pthread.h>
 
-#define GAME_SIZE    200
+#define GAME_SIZE    4 // 200
 
 //#define TEXTIFY(A) #A
 //#define GPIO(pin)  TEXTIFY(/sys/class/gpio/gpio ## pin )
@@ -18,7 +18,13 @@
 
 /* TEST OF THREADS */
 
-//Compile  gcc simon.c flibspi.c cqueue.c -pthread -o simon
+//Compile
+
+//gcc simon.c flibspi.c cqueue.c -pthread -o simon
+
+//scp simon.c   pi@192.168.1.106:/home/pi/Simon
+//scp -r sounds/  pi@192.168.1.106:/home/pi/Simon
+
 
 
 #define ONE_MS    		1000	   // One mseg
@@ -34,6 +40,8 @@ void show_green(void);
 void show_red(void);
 void show_yellow(void);
 void show_buzz(void);
+void wait_for_other_game(void);
+void Flush_Key_Queue(void);
 
 // ===== Timer service ===========================
 
@@ -275,7 +283,15 @@ int main(void)
 {
         pthread_t tid1,tid2,tid3,tid4;
 
-		QueueInit();	// initialize queue
+
+		clrscr();		// Clear Screen
+		gotoxy(20,3);
+		printf(GREEN_TEXT "******* Welcome to Simon Game ********* \n" WHITE_TEXT);
+		
+		gotoxy(20,5);
+		printf(GREEN_TEXT "Press Blue to exit or Green to start \n" WHITE_TEXT);
+	
+		QueueInit();	// initialize keyboard queue
 		InitHard();		// Initialize Hardware Driver 
 
 
@@ -301,6 +317,9 @@ void play (void)
 	
 	
 	game_round=0;
+	Flush_Key_Queue();
+	wait_for_other_game();
+	
 	
 	
 	for (i=0;i<GAME_SIZE;i++)				// Create random keys for the game  
@@ -341,10 +360,11 @@ void play (void)
 			game_round++;	
 		
 		}
-		else 
+		else 				// User failed to follow the key sequence or Timeout
 		{
-			game_round=0;				// User failed to follow the key sequence 
-			
+			game_round=0;	 
+			show_buzz();
+			break;
 		}	
 		
 		
@@ -385,7 +405,7 @@ int Check_User_Keys(int game_round)
 			if(memory[i]!=next_key) 					// Check user answer
 			{
 				printf("User wrong answer \n");
-				show_buzz();
+				
 				return(USER_WRONG_ANSWER);
 			}
 			else
@@ -552,6 +572,62 @@ void show_buzz(void)
 	printf(CYAN_TEXT "BUZZ !!!! \n" WHITE_TEXT);
 	play_sound=BUZZ_SOUND;
 	while(play_sound==BUZZ_SOUND);
+}
+
+
+void wait_for_other_game(void)
+{
+
+int key;
+
+	printf("Press any key to start....\n");  
+	
+	while(!QueueStatus())		// some news?
+	{
+	
+
+		Set_Pin(PIN_BLUE_LED);
+		usleep(300*ONE_MS); 	// 300ms *
+		Clr_Pin(PIN_BLUE_LED);
+		
+		Set_Pin(PIN_RED_LED);
+		usleep(300*ONE_MS); 	// 300ms *
+		Clr_Pin(PIN_RED_LED);
+		
+		Set_Pin(PIN_GREEN_LED);
+		usleep(300*ONE_MS); 	// 300ms *
+		Clr_Pin(PIN_GREEN_LED);
+				
+		Set_Pin(PIN_YELLOW_LED);
+		usleep(300*ONE_MS); 	// 300ms *
+		Clr_Pin(PIN_YELLOW_LED);
+	}
+	
+	key=PullQueue();
+	
+	if(key==BLUE_DOWN)
+	{
+		printf("Bye Bye Simon ....\n");
+		exit(0);
+	}
+	
+	if(key==GREEN_DOWN)
+	{
+		printf("Starting ......\n");	
+		sleep(1);
+	}
+		
+}
+
+void Flush_Key_Queue(void)
+{
+
+int key;
+
+	while(QueueStatus())		// some news?
+	{
+		key=PullQueue();
+	}
 }
 
 

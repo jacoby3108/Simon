@@ -478,4 +478,12 @@ static unsigned char last=0;	// remember last key state
 	last=keys;									// Update last key state
 }
 
+// Ansi.sys like
+
+// Set cursor position
+void gotoxy(int x, int y) { printf("\x1B[%d;%df", y, x); }
+
+// Clear terminal screen and set cursor to top left
+void clrscr() { printf("\x1B[2J\x1B[0;0f"); }
+
 
