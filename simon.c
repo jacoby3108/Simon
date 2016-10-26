@@ -8,7 +8,7 @@
 #include "flibspi.h"
 #include <pthread.h>
 
-#define GAME_SIZE    4 // 200
+#define GAME_SIZE    8 // 200
 
 //#define TEXTIFY(A) #A
 //#define GPIO(pin)  TEXTIFY(/sys/class/gpio/gpio ## pin )
@@ -42,6 +42,9 @@ void show_yellow(void);
 void show_buzz(void);
 void wait_for_other_game(void);
 void Flush_Key_Queue(void);
+void you_won(void);
+int maintest(void);
+
 
 // ===== Timer service ===========================
 
@@ -75,7 +78,7 @@ int Check_User_Keys(int);
 
 unsigned int i,j,k;
 
-
+                              
 unsigned char keyvalues[]={BLUE_DOWN,GREEN_DOWN,RED_DOWN,YELLOW_DOWN};
 const unsigned int Number_Of_Keys=4;
 
@@ -131,67 +134,11 @@ void * thread3() // The APP
 
 {
 
-
-
 	while (1) {
-	
-	
-		//	Set_Timer(3); // 3 seg
-		//	while(Get_Timer_Status()!=TIMEOUT);
-		//	printf(RED_TEXT "The" " App\n" WHITE_TEXT );
 
+		//	maintest();
 			play();
-
-
-
-	
-	
-				
-/*				
-		Clr_Pin(PIN_BLUE_LED);
-		Clr_Pin(PIN_GREEN_LED);
-		Set_Pin(PIN_RED_LED);
-		Set_Pin(PIN_YELLOW_LED);
-				
-				
-		if(QueueStatus())		// some news?
-		{
-			key=PullQueue();
-			printf("Key: %.2X \n",key);
 			
-			
-			if(key==BLUE_DOWN)
-			printf(BLUE_TEXT "BLUE DOWN \n" WHITE_TEXT);
-			
-			if(key==BLUE_UP)
-			printf(BLUE_TEXT "BLUE UP \n" WHITE_TEXT);
-		
-						
-			if(key==GREEN_DOWN)
-			printf(GREEN_TEXT "GREEN DOWN \n" WHITE_TEXT);
-			
-			if(key==GREEN_UP)
-			printf(GREEN_TEXT "GREEN UP \n" WHITE_TEXT);
-			
-			if(key==RED_DOWN)
-			printf(RED_TEXT "RED DOWN \n" WHITE_TEXT);
-			
-			if(key==RED_UP)
-			printf(RED_TEXT "RED UP \n" WHITE_TEXT);
-			
-			if(key==YELLOW_DOWN)
-			printf(YELLOW_TEXT "YELLOW DOWN \n" WHITE_TEXT);
-			
-			if(key==YELLOW_UP)
-			printf(YELLOW_TEXT "YELLOW UP \n" WHITE_TEXT);
-			
-				
-		}
-				
-		//		sleep(5);
-				
-*/				
-				
 	
 	}
 
@@ -264,18 +211,77 @@ void * thread4()  // Sound Thread
 }
 //*****************************************************************************************
 
-int maintest(void)
+int maintest(void)  // this function is to see how use the services 
 {
 
-	unsigned char key ;
-	QueueInit();	// initialize queue
+	unsigned char key,i ;
+	char *colors[]={BLUE_TEXT,GREEN_TEXT,RED_TEXT,YELLOW_TEXT};
+	unsigned char led_colors[]={PIN_BLUE_LED,PIN_GREEN_LED,PIN_RED_LED,PIN_YELLOW_LED};
 	
+	QueueInit();	// initialize queue
 	InitHard();
 	
+ while(1)
+ {
 	
 	
+	printf(YELLOW_TEXT "Simon Services Test\n" WHITE_TEXT );
 
+	printf("Try to press a key while test is running: \n\n");
 	
+	
+		if(QueueStatus())	// How to use keyboard 
+		{
+			
+			key=PullQueue();
+			printf("Key (HEX Code): %.2X \n",key);
+					
+			if(key==BLUE_DOWN)
+			printf(BLUE_TEXT "BLUE DOWN \n" WHITE_TEXT);
+			
+			if(key==BLUE_UP)
+			printf(BLUE_TEXT "BLUE UP \n" WHITE_TEXT);
+		
+						
+			if(key==GREEN_DOWN)
+			printf(GREEN_TEXT "GREEN DOWN \n" WHITE_TEXT);
+			
+			if(key==GREEN_UP)
+			printf(GREEN_TEXT "GREEN UP \n" WHITE_TEXT);
+			
+			if(key==RED_DOWN)
+			printf(RED_TEXT "RED DOWN \n" WHITE_TEXT);
+			
+			if(key==RED_UP)
+			printf(RED_TEXT "RED UP \n" WHITE_TEXT);
+			
+			if(key==YELLOW_DOWN)
+			printf(YELLOW_TEXT "YELLOW DOWN \n" WHITE_TEXT);
+			
+			if(key==YELLOW_UP)
+			printf(YELLOW_TEXT "YELLOW UP \n" WHITE_TEXT);
+		}
+		
+ 
+
+	//how play a sound
+	play_sound=YELLOW_SOUND; // play sound and led
+	//while(play_sound==YELLOW_SOUND);
+
+	for (i=0;i<sizeof(colors)/sizeof(colors[0]);i++)
+	{  
+		//Set_Pin(led_colors[i]);
+		printf("%s\n",colors[i] );
+		printf("Counting in color \n");
+		Set_Timer(1); // 1 seg					// How to use the timer
+		while(Get_Timer_Status()!=TIMEOUT);
+		//Clr_Pin(led_colors[i]);
+			
+	}
+	
+ }
+
+
 	return 0;
 }
 
@@ -283,13 +289,14 @@ int main(void)
 {
         pthread_t tid1,tid2,tid3,tid4;
 
-
+		
+		
 		clrscr();		// Clear Screen
 		gotoxy(20,3);
 		printf(GREEN_TEXT "******* Welcome to Simon Game ********* \n" WHITE_TEXT);
 		
 		gotoxy(20,5);
-		printf(GREEN_TEXT "Press Blue to exit or Green to start \n" WHITE_TEXT);
+		printf(GREEN_TEXT "Press Green Key to start or Blue Key to exit \n" WHITE_TEXT);
 	
 		QueueInit();	// initialize keyboard queue
 		InitHard();		// Initialize Hardware Driver 
@@ -314,20 +321,24 @@ void play (void)
 	int actual_key=0;
 	int game_status=OK;
 	int game_round;
-	
+	int ran_key;
 	
 	game_round=0;
 	Flush_Key_Queue();
 	wait_for_other_game();
+	Flush_Key_Queue();
 	
-	
+	printf("Start game .........:)/n");
 	
 	for (i=0;i<GAME_SIZE;i++)				// Create random keys for the game  
 	{
-		memory[i]=keyvalues[rand()%Number_Of_Keys];
+		
+		ran_key=rand()%Number_Of_Keys;
+		printf("rankey:%d ",ran_key);
+		memory[i]=keyvalues[ran_key];
 	}
-	
-	
+	printf("\n");
+/*	
 	memory[0]=keyvalues[0];
 	memory[1]=keyvalues[1];
 	memory[2]=keyvalues[2];
@@ -337,7 +348,7 @@ void play (void)
 	memory[6]=keyvalues[2];
 	memory[7]=keyvalues[3];
 	
-	
+*/	
 	
 	game_round=0;
 	
@@ -371,9 +382,33 @@ void play (void)
 	} // end of while	
 	
 	if(game_round == GAME_SIZE)
-		printf("you won !!! \n");
+			you_won();
+	
+	
+		
 }
 
+void you_won(void)
+{
+	int i;
+	printf("you won !!! \n");
+	
+	for (i=0;i<6;i++)
+	{
+		Set_Pin(PIN_BLUE_LED);
+	  	Set_Pin(PIN_GREEN_LED);
+		usleep(300*ONE_MS); 	// 300ms *
+		Clr_Pin(PIN_GREEN_LED);
+		Clr_Pin(PIN_BLUE_LED);
+		
+		Set_Pin(PIN_YELLOW_LED);
+		Set_Pin(PIN_RED_LED);
+		usleep(300*ONE_MS); 	// 300ms *
+		Clr_Pin(PIN_YELLOW_LED);
+		Clr_Pin(PIN_RED_LED);
+	}	
+		
+}
 
 
 int Check_User_Keys(int game_round)
@@ -580,7 +615,7 @@ void wait_for_other_game(void)
 
 int key;
 
-	printf("Press any key to start....\n");  
+	//printf("Press the Green button to start....\n");  
 	
 	while(!QueueStatus())		// some news?
 	{

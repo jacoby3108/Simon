@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include "cqueue.h"
-#define QSIZE  4	// Queue size (must be less than 0xFF)	
+#define QSIZE  16	// Queue size (must be less than 0xFF)	
 
 
 static unsigned char buffer[QSIZE];  // Storage for circuar queue

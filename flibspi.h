@@ -14,11 +14,11 @@
 
 // ============ SOUNDS ===========
 
-#define SIMON_RED_SOUND 		system("aplay -q ./sounds/red.wav")	
-#define SIMON_GREEN_SOUND 		system("aplay -q ./sounds/green.wav")	
-#define SIMON_BLUE_SOUND 		system("aplay -q ./sounds/blue.wav")	
-#define SIMON_YELLOW_SOUND 		system("aplay -q ./sounds/yellow.wav")	
-#define SIMON_BUZZ_SOUND 		system("aplay -q ./sounds/buzz.wav")
+#define SIMON_RED_SOUND 		system("aplay -q  /home/pi/Simon/sounds/red.wav")	
+#define SIMON_GREEN_SOUND 		system("aplay -q  /home/pi/Simon/sounds/green.wav")	
+#define SIMON_BLUE_SOUND 		system("aplay -q  /home/pi/Simon/sounds/blue.wav")	
+#define SIMON_YELLOW_SOUND 		system("aplay -q  /home/pi/Simon/sounds/yellow.wav")	
+#define SIMON_BUZZ_SOUND 		system("aplay -q  /home/pi/Simon/sounds/buzz.wav")
 
 // ============ LEDS ============
 
