@@ -40,6 +40,16 @@ typedef struct
 		} PIN;
 			
 			
+			
+//*****************Select Hardware Type*********************************
+#define DANY_BOARD		0
+#define NICO_BOARD		1
+
+#define HARDWARE 	NICO_BOARD			
+			
+#if HARDWARE == DANY_BOARD
+			
+			
 PIN pins[] ={{"BLUE_LED",18,"18","out",0},
 			 {"GREEN_LED",25,"25","out",0},
 			 {"RED_LED",23,"23","out",0},
@@ -48,6 +58,20 @@ PIN pins[] ={{"BLUE_LED",18,"18","out",0},
 			 {"GREEN_KEY",17,"17","in",0},
 			 {"RED_KEY",4,"4","in",0},
 			 {"YELLOW_KEY",22,"22","in",0}};
+
+#elif HARDWARE == NICO_BOARD
+
+PIN pins[] ={{"BLUE_LED",24,"24","out",0},
+			 {"GREEN_LED",18,"18","out",0},
+			 {"RED_LED",4,"4","out",0},
+			 {"YELLOW_LED",27,"27","out",0},
+			 {"BLUE_KEY",25,"25","in",0},
+			 {"GREEN_KEY",23,"23","in",0},
+			 {"RED_KEY",17,"17","in",0},
+			 {"YELLOW_KEY",22,"22","in",0}};
+
+
+#endif
 
 
 // Pin file system
